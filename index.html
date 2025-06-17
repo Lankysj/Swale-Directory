@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Community Directory</title>
+
+  <!-- Leaflet CSS + JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <!-- Tabletop.js for Google Sheets -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tabletop.js/1.5.1/tabletop.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: 260px;
+      background: #f4f4f4;
+      padding: 20px;
+      overflow-y: auto;
+      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar input, .sidebar select {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 8px;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #map {
+      height: 400px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 12px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background-color: #00796b;
+      color: white;
+    }
+
+    .icon {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<div class="sidebar">
+  <input type="text" placeholder="Name" />
+  <select><option>Project</option></select>
+  <select><option>Location</option></select>
+  <select><option>Position</option></select>
+  <select><option>Skills & Expertise</option></select>
+  <select><option>More actions...</option></select>
+</div>
+
+<div class="main">
+  <div id="map"></div>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Project</th>
+        <th>Location</th>
+        <th>Position</th>
+        <th>Email</th>
+        <th>Phone</th>
+      </tr>
+    </thead>
+    <tbody id="contactTable">
+      <!-- Rows will go here -->
+    </tbody>
+  </table>
+</div>
+
+<script>
+  let map = L.map('map').setView([51.3738, 0.8496], 10); // Swale area
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  function loadSheetData(data) {
+    const table = document.getElementById("contactTable");
+
+    data.forEach(person => {
+      const row = document.createElement("tr");
+      row.innerHTML = \`
+        <td>\${person.Name}</td>
+        <td>\${person.Project}</td>
+        <td>\${person.Location}</td>
+        <td>\${person.Position}</td>
+        <td class="icon"><a href="mailto:\${person.Email}">📧 Email</a></td>
+        <td class="icon"><a href="tel:\${person.Phone}">📞 \${person.Phone}</a></td>
+      \`;
+      table.appendChild(row);
+
+      const lat = parseFloat(person.Latitude);
+      const lng = parseFloat(person.Longitude);
+
+      if (!isNaN(lat) && !isNaN(lng)) {
+        L.marker([lat, lng])
+          .addTo(map)
+          .bindPopup(\`<strong>\${person.Name}</strong><br>\${person.Project}<br>\${person.Position}\`);
+      }
+    });
+  }
+
+  window.addEventListener("DOMContentLoaded", () => {
+    Tabletop.init({
+      key: "1vjvs6B_DOY1qZVgcyr5q_GW69eiVgy0A-CcwZ2L1g6U", // Your sheet ID
+      callback: loadSheetData,
+      simpleSheet: true
+    });
+  });
+</script>
+
+</body>
+</html>
